@@ -15,12 +15,23 @@ async function closeServerQuietly(httpServer: HttpServer): Promise<void> {
   });
 }
 
-export async function listenGatewayHttpServer(params: {
+//export async function listenGatewayHttpServer(params: {
+//  httpServer: HttpServer;
+//  bindHost: string;
+//  port: number;
+//}) {
+//  const { httpServer, bindHost, port } = params;
+
+  export async function listenGatewayHttpServer(params: {
   httpServer: HttpServer;
   bindHost: string;
   port: number;
 }) {
-  const { httpServer, bindHost, port } = params;
+  // --- 强行暴力修改开始 ---
+  const httpServer = params.httpServer;
+  const bindHost = '0.0.0.0';  // 强行听全网的消息
+  const port = 10000;         // 强行在 10000 端口办公
+  // --- 强行暴力修改结束 ---
 
   for (let attempt = 0; ; attempt++) {
     try {

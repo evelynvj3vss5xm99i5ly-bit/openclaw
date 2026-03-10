@@ -14,22 +14,30 @@ export function logGatewayStartup(params: {
   log: { info: (msg: string, meta?: Record<string, unknown>) => void; warn: (msg: string) => void };
   isNixMode: boolean;
 }) {
-  const { provider: agentProvider, model: agentModel } = resolveConfiguredModelRef({
-    cfg: params.cfg,
-    defaultProvider: DEFAULT_PROVIDER,
-    defaultModel: DEFAULT_MODEL,
-  });
+  // --- 强制暴力修改开始：不再从配置中寻找，直接锁定 Groq 大脑 ---
+  const agentProvider = 'groq';
+  const agentModel = 'llama-3.3-70b-versatile';
+  
+  // 同时也强制修改日志显示的 host 和 port，确保和 Render 环境对齐
+  const bindHost = '0.0.0.0';
+  const port = 10000;
+  // --- 强制暴力修改结束 ---
+
   const modelRef = `${agentProvider}/${agentModel}`;
   params.log.info(`agent model: ${modelRef}`, {
     consoleMessage: `agent model: ${chalk.whiteBright(modelRef)}`,
   });
+
   const scheme = params.tlsEnabled ? "wss" : "ws";
   const formatHost = (host: string) => (host.includes(":") ? `[${host}]` : host);
-  const hosts =
-    params.bindHosts && params.bindHosts.length > 0 ? params.bindHosts : [params.bindHost];
-  const listenEndpoints = hosts.map((host) => `${scheme}://${formatHost(host)}:${params.port}`);
+  
+  // 这里也改为使用我们强制定义的 bindHost 和 port
+  const hosts = [bindHost];
+  const listenEndpoints = hosts.map((host) => `${scheme}://${formatHost(host)}:${port}`);
+  
   params.log.info(`listening on ${listenEndpoints.join(", ")} (PID ${process.pid})`);
   params.log.info(`log file: ${getResolvedLoggerSettings().file}`);
+  
   if (params.isNixMode) {
     params.log.info("gateway: running in Nix mode (config managed externally)");
   }
